@@ -1,0 +1,99 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import linregress
+
+df = pd.read_excel("Measurements_christmas_2025.xlsx")
+print(df.head())
+
+df['datetime'] = pd.to_datetime(df['datetime'])
+
+plt.figure(figsize=(10, 6))
+plt.plot(df['datetime'], df['CO2'], marker='o', linestyle='-')
+plt.xlabel('Time')
+plt.ylabel('CO2 (ppm)')
+plt.title('CO2 vs Time')
+plt.grid(True)
+plt.xticks(rotation=45)  
+plt.tight_layout()       
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(df['datetime'], df['d13C'], marker='o', linestyle='-')
+plt.xlabel('Time')
+plt.ylabel('d13C (‰)')
+plt.title('d13C vs Time')
+plt.grid(True)
+plt.xticks(rotation=45)  
+plt.tight_layout()       
+plt.show()
+
+
+#%% Keeling plot
+
+df['inv_CO2'] = 1 / df['CO2']
+
+# Linear regression (δ13C = slope * 1/CO2 + intercept)
+slope, intercept, r_value, p_value, std_err = linregress(df['inv_CO2'], df['d13C'])
+
+print(f"Slope: {slope:.3f}, Intercept: {intercept:.3f} (‰)")
+print(f"R-squared: {r_value**2:.3f}")
+
+plt.figure(figsize=(8, 6))
+plt.scatter(df['inv_CO2'], df['d13C'], color='blue', label='Data')
+plt.plot(df['inv_CO2'], intercept + slope*df['inv_CO2'], color='red', label='Linear fit')
+plt.xlabel('1 / CO2 (1/ppm)')
+plt.ylabel('δ13C (‰)')
+plt.title('Keeling Plot')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+#%% Periods
+
+periods = [
+    ('2025-12-20 19:24:48', '2025-12-21 10:45:00'),
+    ('2025-12-25 15:01:11', '2025-12-26 10:57:59'),
+    ('2025-12-28 14:19:11', '2025-12-29 00:35:57'),
+    ('2025-12-30 15:18:06', '2025-12-31 10:37:47'),
+    ('2026-01-04 06:38:52', '2026-01-05 13:03:38'),
+]
+
+plt.figure(figsize=(8, 6))
+colors = ['blue', 'green', 'orange', 'red', 'purple']
+
+for i, (start, end) in enumerate(periods):
+    # Select data in this period
+    mask = (df['datetime'] >= pd.to_datetime(start)) & (df['datetime'] <= pd.to_datetime(end))
+    period_df = df[mask].copy()
+
+    # 1/CO2
+    period_df['inv_CO2'] = 1 / period_df['CO2']
+
+    # Linear regression
+    slope, intercept, r_value, p_value, std_err = linregress(period_df['inv_CO2'], period_df['d13C'])
+    print(f"Period {i+1}: slope={slope:.3f}, intercept={intercept:.3f}, R²={r_value**2:.3f}")
+
+    # Plotting data points
+    plt.scatter(period_df['inv_CO2'], period_df['d13C'], color=colors[i % len(colors)], label=f'Period {i+1}')
+    
+    # Plot regression line
+    x_fit = np.linspace(period_df['inv_CO2'].min(), period_df['inv_CO2'].max(), 100)
+    y_fit = intercept + slope * x_fit
+    plt.plot(x_fit, y_fit, color=colors[i % len(colors)], linestyle='--')
+
+plt.xlabel('1 / CO2 (1/ppm)')
+plt.ylabel('δ13C (‰)')
+plt.title('Keeling Plot with Different Time Periods')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+# We can continue by looking at:
+# Sources
+# Significance
+# Explanation: Wind speed, wind direction, temperature, etc...
