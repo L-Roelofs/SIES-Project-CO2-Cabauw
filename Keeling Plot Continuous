@@ -1,0 +1,36 @@
+import pandas as pd
+
+CO2_data_christmas_2025 = pd.read_csv('Measurements_christmas_2025.csv')
+
+datetime = pd.to_datetime(CO2_data_christmas_2025['datetime'])
+CO2 = CO2_data_christmas_2025['CO2']
+d13C = CO2_data_christmas_2025['d13C']
+d18O = CO2_data_christmas_2025['d18O']
+inverse_CO2 = CO2_data_christmas_2025['1/CO2']
+
+import matplotlib.pyplot as plt
+
+plt.plot(datetime, CO2)
+plt.xlabel('datetime')
+plt.ylabel('CO2 concentration')
+plt.show()
+
+plt.plot(datetime, d13C)
+plt.xlabel('datetime')
+plt.ylabel('d13C')
+plt.show()
+
+plt.plot(datetime, d18O)
+plt.xlabel('datetime')
+plt.ylabel('d18O')
+plt.show()
+
+plt.scatter(inverse_CO2, d13C, c=datetime, cmap='rainbow', s=3)
+plt.xlabel('1/CO2')
+plt.ylabel('d13C')
+plt.show()
+
+plt.scatter(inverse_CO2, d18O, c=datetime, cmap='rainbow', s=3)
+plt.xlabel('1/CO2')
+plt.ylabel('d18O')
+plt.show()
